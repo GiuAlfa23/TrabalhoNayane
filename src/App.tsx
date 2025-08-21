@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 const PLAYERS = {
   1: { name: "Azul", short: "AZ", color: "#2563eb" },
@@ -6,8 +6,6 @@ const PLAYERS = {
 };
 
 type Owner = 0 | 1 | 2;
-
-type Action = "CEL";
 
 function range(n: number) {
   return Array.from({ length: n }, (_, i) => i);
@@ -43,7 +41,7 @@ export default function PintandoMatriz() {
   const [quiz, setQuiz] = useState<{ open: boolean; mat: number[][]; det: number; message?: string }>({ open: false, mat: [], det: 0 });
   const [usedMatrices, setUsedMatrices] = useState<string[]>([]);
   const [pendingClick, setPendingClick] = useState<{ row: number; col: number } | null>(null);
-  const [timeLeft, setTimeLeft] = useState(240); // 4 minutos em segundos
+  const [timeLeft, setTimeLeft] = useState(240);
 
   const resetBoard = (size = N) => {
     setBoard(Array(size * size).fill(0));
@@ -65,7 +63,7 @@ export default function PintandoMatriz() {
       if (before === player) return prev;
 
       setScore((s) => {
-        const ns = { ...s } as any;
+        const ns = { ...s };
         if (before === 1) ns[1] = Math.max(0, ns[1] - 1);
         if (before === 2) ns[2] = Math.max(0, ns[2] - 1);
         ns[player] = ns[player] + 1;
@@ -141,7 +139,7 @@ export default function PintandoMatriz() {
   };
 
   const handleCellClick = (row: number, col: number) => {
-    if (winner || quiz.open) return;
+    if (winner !== 0 || quiz.open) return;
     setPendingClick({ row, col });
     askQuiz();
   };
@@ -151,7 +149,11 @@ export default function PintandoMatriz() {
     setTimeout(() => resetBoard(size), 0);
   };
 
-  // Temporizador de 4 minutos
+  const endGameByTime = () => {
+    const winnerByTime = score[1] === score[2] ? 0 : score[1] > score[2] ? 1 : 2;
+    setWinner(winnerByTime);
+  };
+
   useEffect(() => {
     if (winner !== 0) return;
     if (timeLeft <= 0) {
@@ -161,11 +163,6 @@ export default function PintandoMatriz() {
     const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(timer);
   }, [timeLeft, winner]);
-
-  const endGameByTime = () => {
-    const winnerByTime = score[1] === score[2] ? 0 : score[1] > score[2] ? 1 : 2;
-    setWinner(winnerByTime);
-  };
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex items-center justify-center p-4">
